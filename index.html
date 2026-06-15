@@ -159,7 +159,8 @@
   .sysrow .ddel{border:none;background:rgba(0,0,0,.3);color:#fff;width:18px;height:18px;border-radius:50%;
     font-size:11px;line-height:18px;cursor:pointer;opacity:0;transition:opacity .12s;padding:0}
   .sysrow:hover .ddel{opacity:1}
-  .edited{font-size:10.5px;color:#8a9099;white-space:nowrap;margin-bottom:1px}
+  .btext{outline:none}
+  .bedit{display:block;text-align:right;font-size:10.5px;margin-top:3px;opacity:.5}
   .pcard{border:1px solid var(--line-strong);border-radius:10px;padding:9px;margin-top:8px;background:var(--field)}
   .pdel{border:none;background:#e6e3dd;color:#8a857c;width:32px;border-radius:8px;cursor:pointer;font-size:13px;flex:none}
   .pdel:hover{background:#dad6cd}
@@ -483,22 +484,23 @@ function render(){
       bubble.className='bubble img';
       const im=document.createElement('img'); im.src=m.img; bubble.appendChild(im);
     } else {
-      bubble.className='bubble'; bubble.textContent=m.text;
+      bubble.className='bubble';
       const bg = me ? state.myBubble : state.otherBubble;
       bubble.style.background = bg; bubble.style.color = textOn(bg);
-      bubble.contentEditable='true'; bubble.spellcheck=false;
-      bubble.onblur=()=>{
-        const nv=bubble.innerText.replace(/\u00a0/g,' ').replace(/\s+$/,'');
+      const txt=document.createElement('span'); txt.className='btext';
+      txt.textContent=m.text; txt.contentEditable='true'; txt.spellcheck=false;
+      txt.onblur=()=>{
+        const nv=txt.innerText.replace(/\u00a0/g,' ').replace(/\s+$/,'');
         if(nv!==m.text){
           m.text=nv;
           if(!m.edited){ if(confirm('(수정됨) 표시를 넣을까요?')) m.edited=true; }
           render();
         }
       };
+      bubble.appendChild(txt);
+      if(m.edited){ const e=document.createElement('span'); e.className='bedit'; e.contentEditable='false'; e.textContent='수정됨'; bubble.appendChild(e); }
     }
     line.appendChild(bubble);
-
-    if(m.edited){ const ed=document.createElement('div'); ed.className='edited'; ed.textContent='수정됨'; line.appendChild(ed); }
 
     if(state.show.time){
       const t=document.createElement('div'); t.className='time'; t.textContent=m.time||'';
@@ -506,7 +508,8 @@ function render(){
       t.onblur=()=>{ m.time=t.textContent.replace(/\n/g,' ').trim(); };
       line.appendChild(t);
     }
-    col.appendChild(line); row.appendChild(col);
+    col.appendChild(line);
+    row.appendChild(col);
 
     const del=document.createElement('button');
     del.className='del'; del.textContent='×';
@@ -722,7 +725,7 @@ const EXPORT_CSS = ".kmsg{width:100%;max-width:360px;margin:0 auto;border-radius
 +".kmsg .m.o .bb{border-top-left-radius:4px}.kmsg .m.me .bb{border-top-right-radius:4px}"
 +".kmsg .bb.img{padding:0;background:transparent}.kmsg .bb.img img{display:block;max-width:200px;border-radius:14px}"
 +".kmsg .tm{font-size:10.5px;color:#5a6168;margin-bottom:1px;white-space:nowrap}"
-+".kmsg .ed{font-size:10.5px;color:#8a9099;margin-bottom:1px;white-space:nowrap}"
++".kmsg .bedit{display:block;text-align:right;font-size:10.5px;margin-top:3px;opacity:.5}"
 +".kmsg .sys{display:flex;justify-content:center;margin:9px 0 4px}"
 +".kmsg .sys span{text-align:center;color:#3f4a52;font-size:11.5px;font-weight:500;background:rgba(255,255,255,.45);padding:4px 12px;border-radius:11px;max-width:78%}"
 +".kmsg .wm{position:absolute;right:10px;bottom:10px;background:rgba(0,0,0,.5);color:#fff;font-size:11px;font-weight:600;padding:3px 10px;border-radius:8px}";
@@ -759,10 +762,10 @@ function buildExportHTML(){
     if(!me&&showName&&meta) h+='<div class="nm">'+esc(p?p.name:'상대')+'</div>';
     h+='<div class="ln">';
     if(m.type==='image') h+='<div class="bb img"><img src="'+m.img+'"></div>';
-    else { const bg=me?state.myBubble:state.otherBubble; h+='<div class="bb" style="background:'+bg+';color:'+textOn(bg)+'">'+esc(m.text)+'</div>'; }
-    if(m.edited) h+='<div class="ed">수정됨</div>';
+    else { const bg=me?state.myBubble:state.otherBubble; h+='<div class="bb" style="background:'+bg+';color:'+textOn(bg)+'">'+esc(m.text)+(m.edited?'<span class="bedit">수정됨</span>':'')+'</div>'; }
     if(state.show.time&&(m.time||'').trim()) h+='<div class="tm">'+esc(m.time)+'</div>';
-    h+='</div></div>';
+    h+='</div>';
+    h+='</div>';
   });
   h+='</div>';
   if(state.wm.on) h+='<span class="wm">'+esc(state.wm.text)+'</span>';
